@@ -1,64 +1,21 @@
-package by.savik.manager;
+package by.savik.service;
 
-import by.savik.factory.FurnitureFactory;
 import by.savik.model.Furniture;
 import by.savik.model.Type;
 import com.mongodb.MongoException;
-import com.mongodb.client.*;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 import org.bson.Document;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FurnitureManager {
-    private static final String URL = "jdbc:postgresql://localhost:5432/furniture_db";
-    private static final String USER = "user";
-    private static final String PASSWORD = "1234";
-
-
-    private static final String MONGO_URL = "mongodb://admin:admin123@localhost:27017/?authSource=admin&authMechanism=SCRAM-SHA-1";
-    private static final String MONGO_DB = "furniture_db";
-    private static final String MONGO_COLLECTION = "furniture";
-
-
-    public static void main(String[] args) {
-        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD); MongoClient mongoClient = MongoClients.create(MONGO_URL)) {
-
-            System.out.println("Connection to the databases is successful");
-
-
-            System.out.println("Adding furniture to postgres database");
-
-            for (int i = 0; i < 5000; i++) {
-                Furniture furniture = FurnitureFactory.next();
-                addFurniture(connection, furniture);
-                System.out.println(i + 1 + " " + furniture + " added to database");
-            }
-
-            System.out.println("Exporting furniture by type");
-            List<Furniture> furnitureListByType = getFurnitureByType(connection, Type.CHAIR);
-            System.out.println("Item count with type - " + Type.CHAIR + " = " + furnitureListByType.size() + " ");
-            furnitureListByType.forEach(System.out::println);
-
-            MongoDatabase database = mongoClient.getDatabase(MONGO_DB);
-            MongoCollection<Document> collection = database.getCollection(MONGO_COLLECTION);
-            System.out.println("Importing furniture list to MongoDB");
-            for (Furniture furniture : furnitureListByType) {
-                addFurnitureToMongoDB(collection, furniture);
-                System.out.println("Item " + furniture + " added to database");
-            }
-
-        } catch (SQLException e) {
-            System.err.println("The database could not be accessed : " + e.getMessage());
-        } catch (MongoException e) {
-            System.err.println("MongoDB Error : " + e.getMessage());
-        } catch (Exception e) {
-            System.err.println("Unexpected error : " + e.getMessage());
-        }
-    }
-
+public class FurnitureService {
 
     public static void addFurniture(Connection connection, Furniture furniture) throws SQLException {
         String sql = "INSERT INTO furniture (type, material, price, color) VALUES (?, ?, ?, ?)";
@@ -92,7 +49,7 @@ public class FurnitureManager {
         }
     }
 
-    private static void addFurnitureToMongoDB(MongoCollection<Document> collection, Furniture furniture) throws MongoException {
+    public static void addFurnitureToMongoDB(MongoCollection<Document> collection, Furniture furniture) throws MongoException {
         Document document = new Document("id", furniture.getId())
                 .append("type", furniture.getType().name())
                 .append("material", furniture.getMaterial())
@@ -101,7 +58,7 @@ public class FurnitureManager {
         collection.insertOne(document);
     }
 
-    private static List<Furniture> getItemByMaterial(MongoCollection<Document> collection, String material) throws MongoException {
+    public static List<Furniture> getItemByMaterial(MongoCollection<Document> collection, String material) throws MongoException {
         List<Furniture> furnitureList = new ArrayList<>();
         FindIterable<Document> documents = collection.find(Filters.eq("material", material));
         for (Document document : documents) {

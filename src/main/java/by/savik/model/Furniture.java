@@ -37,6 +37,6 @@ public class Furniture {
 
     @Override
     public String toString() {
-        return "Furniture item: (type = " + type + ", material = " + material + ", price = " + price + "RUB, color = " + color + ") ";
+        return "Furniture item: (type = " + type + ", material = " + material + ", price = " + price + " RUB, color = " + color + ") ";
     }
 }

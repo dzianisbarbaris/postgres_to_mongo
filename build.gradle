@@ -1,0 +1,36 @@
+plugins {
+    id 'java'
+    id 'application'
+    id("com.github.johnrengelman.shadow") version "8.1.1"
+}
+
+group = 'by.savik'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.mongodb:mongodb-driver-sync:5.5.1'
+    implementation 'org.postgresql:postgresql:42.7.7'
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'by.savik.manager.FurnitureManager'
+    }
+}
+application {
+    mainClass = 'by.savik.manager.FurnitureManager';
+}
+
+shadowJar {
+    archiveFileName = 'furniture-manager.jar'
+}

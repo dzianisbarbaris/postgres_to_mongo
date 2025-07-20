@@ -17,22 +17,13 @@ public class FurnitureMongoRepository {
     private final MongoDatabase database;
     private MongoCollection<Document> collection;
 
-    public FurnitureMongoRepository (MongoDatabase database) {
+    public FurnitureMongoRepository(MongoDatabase database) {
         this.database = database;
         initCollection();
     }
 
     private void initCollection() {
         collection = database.getCollection(MONGO_COLLECTION);
-    }
-
-    public void addFurnitureToMongoDB(Furniture furniture) throws MongoException {
-        Document document = new Document("id", furniture.getId())
-                .append("type", furniture.getType().name())
-                .append("material", furniture.getMaterial())
-                .append("price", furniture.getPrice())
-                .append("color", furniture.getColor());
-        collection.insertOne(document);
     }
 
     public List<Furniture> getFurnitureByMaterial(String material) throws MongoException {

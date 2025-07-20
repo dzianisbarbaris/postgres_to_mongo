@@ -14,7 +14,7 @@ public class FurnitureFactory {
     public FurnitureFactory() {
     }
 
-    public Furniture next() {
+    public static Furniture next() {
         String material = materials.get(random.nextInt(materials.size()));
         String color = colors.get(random.nextInt(colors.size()));
         Type type = Type.randomType();

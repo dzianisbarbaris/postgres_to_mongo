@@ -14,11 +14,11 @@ public class FurnitureFactory {
     public FurnitureFactory() {
     }
 
-    public static Furniture next() {
+    public Furniture next() {
         String material = materials.get(random.nextInt(materials.size()));
         String color = colors.get(random.nextInt(colors.size()));
         Type type = Type.randomType();
         int price = random.nextInt(1000, 10000);
-        return new Furniture(0, type, material, price, color);
+        return new Furniture(type, material, price, color);
     }
 }

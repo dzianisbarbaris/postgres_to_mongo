@@ -24,11 +24,11 @@ test {
 
 jar {
     manifest {
-        attributes 'Main-Class': 'by.savik.ApplicationMain'
+        attributes 'Main-Class': 'ApplicationMain'
     }
 }
 application {
-    mainClass = 'by.savik.ApplicationMain'
+    mainClass = 'ApplicationMain'
 }
 
 shadowJar {

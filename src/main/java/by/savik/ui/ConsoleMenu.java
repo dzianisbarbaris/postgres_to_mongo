@@ -5,8 +5,7 @@ import by.savik.model.Furniture;
 import by.savik.model.Type;
 import by.savik.repository.FurnitureMongoRepository;
 import by.savik.repository.FurniturePostgresRepository;
-import by.savik.service.FurnitureMongoService;
-import by.savik.service.FurniturePostgresService;
+import by.savik.service.FurnitureService;
 import com.mongodb.MongoException;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
@@ -26,11 +25,7 @@ public class ConsoleMenu {
     private static final String URL = "jdbc:postgresql://localhost:5432/furniture_db";
     private static final String USER = "user";
     private static final String PASSWORD = "1234";
-
-    private List<Furniture> furniturePostgresExportList = new ArrayList<>();
-    private List<Furniture> furnitureMongoExportList = new ArrayList<>();
-    private FurniturePostgresService furniturePostgresService;
-    private FurnitureMongoService furnitureMongoService;
+    private FurnitureService furnitureService;
 
     public void start() {
         while (true) {
@@ -42,15 +37,12 @@ public class ConsoleMenu {
                     addFurnitureToPostgres();
                     break;
                 case 2:
-                    furniturePostgresExportList = exportFurnitureByType();
+                    importFurnitureToMongo(exportFurnitureByType());
                     break;
                 case 3:
-                    importFurnitureToMongo(furniturePostgresExportList);
+                    exportFurnitureByMaterialFromMongoDB();
                     break;
                 case 4:
-                    furnitureMongoExportList = exportFurnitureByMaterialFromMongoDB();
-                    break;
-                case 5:
                     return;
             }
         }
@@ -59,23 +51,22 @@ public class ConsoleMenu {
     public void mainMenu() {
         System.out.println("==== Furniture Manager ====");
         System.out.println("1. Add furniture to postgres database.");
-        System.out.println("2. Export furniture by type from postgres database.");
-        System.out.println("3. Import furniture list to MongoDB database.");
-        System.out.println("4. Export furniture by material from MongoDB database.");
-        System.out.println("5. Exit.");
+        System.out.println("2. Transfer furniture by type from postgres to MongoDB.");
+        System.out.println("3. Export furniture by material from MongoDB.");
+        System.out.println("4. Exit.");
     }
 
     public void addFurnitureToPostgres() {
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD)) {
             FurniturePostgresRepository furniturePostgresRepository = new FurniturePostgresRepository(connection);
-            furniturePostgresService = new FurniturePostgresService(furniturePostgresRepository);
+            furnitureService = new FurnitureService(furniturePostgresRepository);
             System.out.println("Enter the number of furniture items");
             int n = scanner.nextInt();
             System.out.println("Adding furniture to postgres database");
             for (int i = 0; i < n; i++) {
                 FurnitureFactory furnitureFactory = new FurnitureFactory();
                 Furniture furniture = furnitureFactory.next();
-                furniturePostgresService.addFurniture(furniture);
+                furnitureService.addFurniture(furniture);
                 System.out.println(i + 1 + " " + furniture + " added to database");
             }
         } catch (SQLException e) {
@@ -89,12 +80,11 @@ public class ConsoleMenu {
         List<Furniture> furnitureList = new ArrayList<>();
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD)) {
             FurniturePostgresRepository furniturePostgresRepository = new FurniturePostgresRepository(connection);
-            furniturePostgresService = new FurniturePostgresService(furniturePostgresRepository);
+            furnitureService = new FurnitureService(furniturePostgresRepository);
             System.out.println("Enter the type of furniture items");
             Type type = Type.valueOf(scanner.next().toUpperCase());
-            furnitureList = furniturePostgresService.getFurnitureByType(type);
+            furnitureList = furnitureService.getFurnitureByType(type);
             System.out.println("Item count with type - " + Type.CHAIR + " = " + furnitureList.size() + " ");
-            furnitureList.forEach(System.out::println);
         } catch (SQLException e) {
             System.err.println("The postgres database could not be accessed : " + e.getMessage());
         } catch (Exception e) {
@@ -107,9 +97,9 @@ public class ConsoleMenu {
         try (MongoClient mongoClient = MongoClients.create(MONGO_URL)) {
             MongoDatabase database = mongoClient.getDatabase(MONGO_DB);
             FurnitureMongoRepository furnitureMongoRepository = new FurnitureMongoRepository(database);
-            furnitureMongoService = new FurnitureMongoService(furnitureMongoRepository);
+            furnitureService = new FurnitureService(furnitureMongoRepository);
             for (Furniture furniture : furnitureList) {
-                furnitureMongoService.addFurnitureToMongoDB(furniture);
+                furnitureService.addFurnitureToMongoDB(furniture);
                 System.out.println("Item " + furniture + " added to database");
             }
         } catch (MongoException e) {
@@ -124,10 +114,10 @@ public class ConsoleMenu {
         try (MongoClient mongoClient = MongoClients.create(MONGO_URL)) {
             MongoDatabase database = mongoClient.getDatabase(MONGO_DB);
             FurnitureMongoRepository furnitureMongoRepository = new FurnitureMongoRepository(database);
-            furnitureMongoService = new FurnitureMongoService(furnitureMongoRepository);
+            furnitureService = new FurnitureService(furnitureMongoRepository);
             System.out.println("Enter the material of furniture items");
             String material = scanner.next();
-            furnitureList = furnitureMongoService.getItemByMaterial(material);
+            furnitureList = furnitureService.getFurnitureByMaterial(material);
             System.out.println("Item count with material - " + material + " = " + furnitureList.size() + " ");
             furnitureList.forEach(System.out::println);
         } catch (MongoException e) {

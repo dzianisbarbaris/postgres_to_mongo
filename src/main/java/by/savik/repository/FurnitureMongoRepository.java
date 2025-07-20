@@ -35,7 +35,7 @@ public class FurnitureMongoRepository {
         collection.insertOne(document);
     }
 
-    public List<Furniture> getItemByMaterial(String material) throws MongoException {
+    public List<Furniture> getFurnitureByMaterial(String material) throws MongoException {
         List<Furniture> furnitureList = new ArrayList<>();
         FindIterable<Document> documents = collection.find(Filters.eq("material", material));
         for (Document document : documents) {

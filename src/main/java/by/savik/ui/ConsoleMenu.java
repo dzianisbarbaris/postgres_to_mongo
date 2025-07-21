@@ -5,7 +5,6 @@ import by.savik.model.Furniture;
 import by.savik.model.Type;
 import by.savik.repository.FurnitureMongoRepository;
 import by.savik.repository.FurniturePostgresRepository;
-import by.savik.repository.FurniturePostgresToMongoRepository;
 import by.savik.service.FurnitureMongoService;
 import by.savik.service.FurniturePostgresService;
 import by.savik.service.FurniturePostgresToMongoService;
@@ -13,6 +12,8 @@ import com.mongodb.MongoException;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -22,6 +23,7 @@ import java.util.List;
 import java.util.Scanner;
 
 public class ConsoleMenu {
+    private static final Logger logger = LogManager.getLogger(ConsoleMenu.class);
     private static final Scanner scanner = new Scanner(System.in);
     private static final String MONGO_URL = "mongodb://admin:admin123@localhost:27017/?authSource=admin&authMechanism=SCRAM-SHA-1";
     private static final String MONGO_DB = "furniture_db";
@@ -38,7 +40,7 @@ public class ConsoleMenu {
         initializeConnections();
         while (true) {
             mainMenu();
-            System.out.print("Select an action: ");
+            logger.info("Select an action: ");
             int action = scanner.nextInt();
             switch (action) {
                 case 1:
@@ -58,11 +60,11 @@ public class ConsoleMenu {
     }
 
     public void mainMenu() {
-        System.out.println("==== Furniture Manager ====");
-        System.out.println("1. Add furniture to postgres database.");
-        System.out.println("2. Transfer furniture by type from postgres to MongoDB.");
-        System.out.println("3. Export furniture by material from MongoDB.");
-        System.out.println("4. Exit.");
+        logger.info("==== Furniture Manager ====");
+        logger.info("1. Add furniture to postgres database.");
+        logger.info("2. Transfer furniture by type from postgres to MongoDB.");
+        logger.info("3. Export furniture by material from MongoDB.");
+        logger.info("4. Exit.");
     }
 
     private void initializeConnections() {
@@ -72,18 +74,17 @@ public class ConsoleMenu {
             MongoDatabase mongoDatabase = mongoClient.getDatabase(MONGO_DB);
             FurniturePostgresRepository postgresRepository = new FurniturePostgresRepository(postgresConnection);
             FurnitureMongoRepository mongoRepository = new FurnitureMongoRepository(mongoDatabase);
-            FurniturePostgresToMongoRepository postgresToMongoRepository = new FurniturePostgresToMongoRepository(postgresConnection, mongoDatabase);
             furniturePostgresService = new FurniturePostgresService(postgresRepository);
             furnitureMongoService = new FurnitureMongoService(mongoRepository);
-            furniturePostgresToMongoService = new FurniturePostgresToMongoService(postgresToMongoRepository);
+            furniturePostgresToMongoService = new FurniturePostgresToMongoService(postgresRepository, mongoRepository);
 
-            System.out.println("Database connections initialized successfully");
+            logger.info("Database connections initialized successfully");
         } catch (SQLException e) {
-            System.err.println("Failed to initialize PostgreSQL connection: " + e.getMessage());
+            logger.error("Failed to initialize PostgreSQL connection: ", e);
         } catch (MongoException e) {
-            System.err.println("Failed to initialize MongoDB connection: " + e.getMessage());
+            logger.error("Failed to initialize MongoDB connection: ", e);
         } catch (Exception e) {
-            System.err.println("Unexpected error during initialization: " + e.getMessage());
+            logger.error("Unexpected error during initialization: ", e);
         }
     }
 
@@ -95,57 +96,56 @@ public class ConsoleMenu {
             if (mongoClient != null) {
                 mongoClient.close();
             }
-            System.out.println("Database connections closed");
+            logger.info("Database connections closed");
         } catch (SQLException e) {
-            System.err.println("Error closing postgres connection: " + e.getMessage());
+            logger.error("Error closing postgres connection: ", e);
         }
     }
 
     public void addFurnitureToPostgres() {
         try {
-            System.out.println("Enter the number of furniture items");
+            logger.info("Enter the number of furniture items");
             int n = scanner.nextInt();
-            System.out.println("Adding furniture to postgres database");
+            logger.info("Adding furniture to postgres database");
             for (int i = 0; i < n; i++) {
                 Furniture furniture = FurnitureFactory.next();
                 furniturePostgresService.addFurniture(furniture);
-                System.out.println(i + 1 + " " + furniture + " added to database");
+                logger.info(i + 1 + " " + furniture + " added to database");
             }
         } catch (SQLException e) {
-            System.err.println("The postgres database could not be accessed : " + e.getMessage());
+            logger.error("The postgres database could not be accessed : ", e);
         } catch (Exception e) {
-            System.err.println("Unexpected error : " + e.getMessage());
+            logger.error("Unexpected error : ", e);
         }
     }
 
-    public List<Furniture> transferFurnitureByType() {
+    public void transferFurnitureByType() {
         List<Furniture> furnitureList = new ArrayList<>();
         try {
-            System.out.println("Enter the type of furniture items");
+            logger.info("Enter the type of furniture items");
             Type type = Type.valueOf(scanner.next().toUpperCase());
             furnitureList = furniturePostgresToMongoService.transferFurnitureByType(type);
-            System.out.println("Item count with with type - " + type + " = " + furnitureList.size() + " ");
+            logger.info("Item count with with type - " + type + " = " + furnitureList.size() + " ");
             furnitureList.forEach(System.out::println);
         } catch (SQLException e) {
-            System.err.println("The postgres database could not be accessed : " + e.getMessage());
+            logger.error("The postgres database could not be accessed : ", e);
         } catch (Exception e) {
-            System.err.println("Unexpected error : " + e.getMessage());
+            logger.error("Unexpected error : ", e);
         }
-        return furnitureList;
     }
 
     private List<Furniture> exportFurnitureByMaterialFromMongoDB() {
         List<Furniture> furnitureList = new ArrayList<>();
         try {
-            System.out.println("Enter the material of furniture items");
+            logger.info("Enter the material of furniture items");
             String material = scanner.next();
             furnitureList = furnitureMongoService.getFurnitureByMaterial(material);
-            System.out.println("Item count with material - " + material + " = " + furnitureList.size() + " ");
-            furnitureList.forEach(System.out::println);
+            logger.info("Item count with material - " + material + " = " + furnitureList.size() + " ");
+            furnitureList.forEach(logger::info);
         } catch (MongoException e) {
-            System.err.println("The mongo database could not be accessed : " + e.getMessage());
+            logger.error("The mongo database could not be accessed : ", e);
         } catch (Exception e) {
-            System.err.println("Unexpected error : " + e.getMessage());
+            logger.error("Unexpected error : ", e);
         }
         return furnitureList;
     }

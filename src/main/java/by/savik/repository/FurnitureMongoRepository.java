@@ -26,6 +26,17 @@ public class FurnitureMongoRepository {
         collection = database.getCollection(MONGO_COLLECTION);
     }
 
+    public void importFurniture(List<Furniture> furnitureList) throws MongoException{
+        for (Furniture furniture : furnitureList) {
+            Document document = new Document("id", furniture.getId())
+                    .append("type", furniture.getType().name())
+                    .append("material", furniture.getMaterial())
+                    .append("price", furniture.getPrice())
+                    .append("color", furniture.getColor());
+            collection.insertOne(document);
+        }
+    }
+
     public List<Furniture> getFurnitureByMaterial(String material) throws MongoException {
         List<Furniture> furnitureList = new ArrayList<>();
         FindIterable<Document> documents = collection.find(Filters.eq("material", material));

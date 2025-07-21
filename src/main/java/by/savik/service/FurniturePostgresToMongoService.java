@@ -2,20 +2,30 @@ package by.savik.service;
 
 import by.savik.model.Furniture;
 import by.savik.model.Type;
-import by.savik.repository.FurniturePostgresToMongoRepository;
+import by.savik.repository.FurnitureMongoRepository;
+import by.savik.repository.FurniturePostgresRepository;
 import com.mongodb.MongoException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.sql.SQLException;
 import java.util.List;
 
 public class FurniturePostgresToMongoService {
-    private final FurniturePostgresToMongoRepository furniturePostgresToMongoRepository;
+    private static final Logger logger = LogManager.getLogger(FurniturePostgresToMongoService.class);
+    private final FurniturePostgresRepository furniturePostgresRepository;
+    private final FurnitureMongoRepository furnitureMongoRepository;
 
-    public FurniturePostgresToMongoService(FurniturePostgresToMongoRepository furniturePostgresToMongoRepository) {
-        this.furniturePostgresToMongoRepository = furniturePostgresToMongoRepository;
+    public FurniturePostgresToMongoService(FurniturePostgresRepository furniturePostgresRepository, FurnitureMongoRepository furnitureMongoRepository) {
+        this.furniturePostgresRepository = furniturePostgresRepository;
+        this.furnitureMongoRepository = furnitureMongoRepository;
     }
 
     public List<Furniture> transferFurnitureByType(Type type) throws SQLException, MongoException {
-        return furniturePostgresToMongoRepository.transferFurnitureByType(type);
+        List<Furniture> furnitureList = furniturePostgresRepository.getFurnitureByType(type);
+        if (!furnitureList.isEmpty()){
+            furnitureMongoRepository.importFurniture(furnitureList);
+        }
+        return furnitureList;
     }
 }

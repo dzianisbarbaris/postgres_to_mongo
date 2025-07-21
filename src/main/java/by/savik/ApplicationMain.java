@@ -1,3 +1,5 @@
+package by.savik;
+
 import by.savik.ui.ConsoleMenu;
 
 public class ApplicationMain {

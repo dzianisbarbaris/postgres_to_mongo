@@ -24,6 +24,19 @@ public class FurniturePostgresRepository {
         preparedStatement.executeUpdate();
     }
 
+    public void addAllFurniture(List<Furniture> furnitureList) throws SQLException {
+        String sql = "INSERT INTO furniture (type, material, price, color) VALUES (?, ?, ?, ?)";
+        PreparedStatement preparedStatement = connection.prepareStatement(sql);
+        for (Furniture furniture : furnitureList) {
+            preparedStatement.setString(1, furniture.getType().name());
+            preparedStatement.setString(2, furniture.getMaterial());
+            preparedStatement.setInt(3, furniture.getPrice());
+            preparedStatement.setString(4, furniture.getColor());
+            preparedStatement.addBatch();
+        }
+        preparedStatement.executeBatch();
+    }
+
     public List<Furniture> getFurnitureByType(Type type) throws SQLException {
         List<Furniture> furnitureList = new ArrayList<>();
         String sql = "SELECT * FROM furniture WHERE type = ?";

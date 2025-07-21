@@ -107,11 +107,17 @@ public class ConsoleMenu {
             logger.info("Enter the number of furniture items");
             int n = scanner.nextInt();
             logger.info("Adding furniture to postgres database");
-            for (int i = 0; i < n; i++) {
+            /*for (int i = 0; i < n; i++) {
                 Furniture furniture = FurnitureFactory.next();
                 furniturePostgresService.addFurniture(furniture);
                 logger.info(i + 1 + " " + furniture + " added to database");
+            }*/
+            List<Furniture> furnitureList = new ArrayList<>();
+            for (int i = 0; i < n; i++) {
+                furnitureList.add(FurnitureFactory.next());
             }
+            furniturePostgresService.addAllFurniture(furnitureList);
+
         } catch (SQLException e) {
             logger.error("The postgres database could not be accessed : ", e);
         } catch (Exception e) {

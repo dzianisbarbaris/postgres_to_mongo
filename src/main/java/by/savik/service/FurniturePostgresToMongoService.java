@@ -24,7 +24,7 @@ public class FurniturePostgresToMongoService {
     public List<Furniture> transferFurnitureByType(Type type) throws SQLException, MongoException {
         List<Furniture> furnitureList = furniturePostgresRepository.getFurnitureByType(type);
         if (!furnitureList.isEmpty()){
-            furnitureMongoRepository.importFurniture(furnitureList);
+            furnitureMongoRepository.importAllFurniture(furnitureList);
         }
         return furnitureList;
     }

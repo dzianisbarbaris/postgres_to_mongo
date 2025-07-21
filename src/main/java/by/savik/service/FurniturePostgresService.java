@@ -18,6 +18,9 @@ public class FurniturePostgresService {
     }
 
 
+    public void addAllFurniture (List<Furniture> furnitureList) throws SQLException {
+        furniturePostgresRepository.addAllFurniture(furnitureList);
+    }
 
     public void addFurniture(Furniture furniture) throws SQLException {
         furniturePostgresRepository.addFurniture(furniture);

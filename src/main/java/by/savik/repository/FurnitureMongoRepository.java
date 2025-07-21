@@ -26,7 +26,15 @@ public class FurnitureMongoRepository {
         collection = database.getCollection(MONGO_COLLECTION);
     }
 
-    public void importFurniture(List<Furniture> furnitureList) throws MongoException{
+    public Document furnitureToDocument(Furniture furniture) {
+        return new Document("id", furniture.getId())
+                .append("type", furniture.getType().name())
+                .append("material", furniture.getMaterial())
+                .append("price", furniture.getPrice())
+                .append("color", furniture.getColor());
+    }
+
+    public void importFurniture(List<Furniture> furnitureList) throws MongoException {
         for (Furniture furniture : furnitureList) {
             Document document = new Document("id", furniture.getId())
                     .append("type", furniture.getType().name())
@@ -34,6 +42,13 @@ public class FurnitureMongoRepository {
                     .append("price", furniture.getPrice())
                     .append("color", furniture.getColor());
             collection.insertOne(document);
+        }
+    }
+
+    public void importAllFurniture(List<Furniture> furnitureList) throws MongoException {
+        List<Document> documents = new ArrayList<>();
+        for (Furniture furniture : furnitureList) {
+            documents.add(furnitureToDocument(furniture));
         }
     }
 

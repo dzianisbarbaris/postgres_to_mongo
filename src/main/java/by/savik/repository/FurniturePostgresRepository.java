@@ -57,5 +57,26 @@ public class FurniturePostgresRepository {
         }
         return furnitureList;
     }
+    public Furniture mapResultSetToFurniture (ResultSet resultSet) throws SQLException{
+        return new Furniture(resultSet.getInt("id"),
+                Type.valueOf(resultSet.getString("type")),
+                resultSet.getString("material"),
+                resultSet.getInt("price"),
+                resultSet.getString("color"));
+    }
+
+    public List<Furniture> getFurnitureByMaterial(String material) throws SQLException {
+        List<Furniture> furnitureList = new ArrayList<>();
+        String sql = "SELECT * FROM furniture WHERE material = ?";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, material);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    furnitureList.add(mapResultSetToFurniture(resultSet));
+                }
+            }
+        }
+        return furnitureList;
+    }
 }
 

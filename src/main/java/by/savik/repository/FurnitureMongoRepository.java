@@ -9,21 +9,17 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import org.bson.Document;
 
+import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.List;
 
 public class FurnitureMongoRepository {
-    private static final String MONGO_COLLECTION = "furniture";
-    private final MongoDatabase database;
-    private MongoCollection<Document> collection;
+    private final MongoCollection<Document> collection;
 
-    public FurnitureMongoRepository(MongoDatabase database) {
-        this.database = database;
-        initCollection();
-    }
-
-    private void initCollection() {
-        collection = database.getCollection(MONGO_COLLECTION);
+    @Inject
+    public FurnitureMongoRepository(@Named("MongoCollection") MongoCollection<Document> collection) {
+        this.collection = collection;
     }
 
     public Document furnitureToDocument(Furniture furniture) {

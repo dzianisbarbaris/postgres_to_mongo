@@ -1,22 +1,18 @@
 package by.savik.ui;
 
+import by.savik.config.FurnitureModule;
 import by.savik.factory.FurnitureFactory;
 import by.savik.model.Furniture;
 import by.savik.model.Type;
-import by.savik.repository.FurnitureMongoRepository;
-import by.savik.repository.FurniturePostgresRepository;
 import by.savik.service.FurnitureMongoService;
 import by.savik.service.FurniturePostgresService;
 import by.savik.service.FurniturePostgresToMongoService;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.mongodb.MongoException;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoDatabase;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,16 +21,10 @@ import java.util.Scanner;
 public class ConsoleMenu {
     private static final Logger logger = LogManager.getLogger(ConsoleMenu.class);
     private static final Scanner scanner = new Scanner(System.in);
-    private static final String MONGO_URL = "mongodb://admin:admin123@localhost:27017/?authSource=admin&authMechanism=SCRAM-SHA-1";
-    private static final String MONGO_DB = "furniture_db";
-    private static final String URL = "jdbc:postgresql://localhost:5432/furniture_db";
-    private static final String USER = "user";
-    private static final String PASSWORD = "1234";
     private FurniturePostgresService furniturePostgresService;
     private FurnitureMongoService furnitureMongoService;
-    private FurniturePostgresToMongoService furniturePostgresToMongoService;
-    private Connection postgresConnection;
-    private MongoClient mongoClient;
+    private FurniturePostgresToMongoService transferService;
+    Injector injector = Guice.createInjector(new FurnitureModule());
 
     public void start() {
         initializeConnections();
@@ -53,7 +43,7 @@ public class ConsoleMenu {
                     exportFurnitureByMaterialFromMongoDB();
                     break;
                 case 4:
-                    closeConnections();
+                   /* closeConnections();*/
                     return;
             }
         }
@@ -69,26 +59,19 @@ public class ConsoleMenu {
 
     private void initializeConnections() {
         try {
-            postgresConnection = DriverManager.getConnection(URL, USER, PASSWORD);
-            mongoClient = MongoClients.create(MONGO_URL);
-            MongoDatabase mongoDatabase = mongoClient.getDatabase(MONGO_DB);
-            FurniturePostgresRepository postgresRepository = new FurniturePostgresRepository(postgresConnection);
-            FurnitureMongoRepository mongoRepository = new FurnitureMongoRepository(mongoDatabase);
-            furniturePostgresService = new FurniturePostgresService(postgresRepository);
-            furnitureMongoService = new FurnitureMongoService(mongoRepository);
-            furniturePostgresToMongoService = new FurniturePostgresToMongoService(postgresRepository, mongoRepository);
+            transferService = injector.getInstance(FurniturePostgresToMongoService.class);
+            furniturePostgresService = injector.getInstance(FurniturePostgresService.class);
+            furnitureMongoService = injector.getInstance(FurnitureMongoService.class);
 
-            logger.info("Database connections initialized successfully");
-        } catch (SQLException e) {
-            logger.error("Failed to initialize PostgreSQL connection: ", e);
         } catch (MongoException e) {
             logger.error("Failed to initialize MongoDB connection: ", e);
         } catch (Exception e) {
             logger.error("Unexpected error during initialization: ", e);
         }
+        logger.info("Database connections initialized successfully");
     }
 
-    private void closeConnections() {
+   /* private void closeConnections() {
         try {
             if (postgresConnection != null && !postgresConnection.isClosed()) {
                 postgresConnection.close();
@@ -100,7 +83,7 @@ public class ConsoleMenu {
         } catch (SQLException e) {
             logger.error("Error closing postgres connection: ", e);
         }
-    }
+    }*/
 
     public void addFurnitureToPostgres() {
         try {
@@ -130,7 +113,7 @@ public class ConsoleMenu {
         try {
             logger.info("Enter the type of furniture items");
             Type type = Type.valueOf(scanner.next().toUpperCase());
-            furnitureList = furniturePostgresToMongoService.transferFurnitureByType(type);
+            furnitureList = transferService.transferFurnitureByType(type);
             logger.info("Item count with with type - " + type + " = " + furnitureList.size() + " ");
             furnitureList.forEach(System.out::println);
         } catch (SQLException e) {

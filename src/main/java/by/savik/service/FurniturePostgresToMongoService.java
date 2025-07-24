@@ -8,6 +8,7 @@ import com.mongodb.MongoException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.inject.Inject;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -16,6 +17,7 @@ public class FurniturePostgresToMongoService {
     private final FurniturePostgresRepository furniturePostgresRepository;
     private final FurnitureMongoRepository furnitureMongoRepository;
 
+    @Inject
     public FurniturePostgresToMongoService(FurniturePostgresRepository furniturePostgresRepository, FurnitureMongoRepository furnitureMongoRepository) {
         this.furniturePostgresRepository = furniturePostgresRepository;
         this.furnitureMongoRepository = furnitureMongoRepository;

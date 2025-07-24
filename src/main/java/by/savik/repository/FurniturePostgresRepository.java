@@ -3,6 +3,8 @@ package by.savik.repository;
 import by.savik.model.Furniture;
 import by.savik.model.Type;
 
+import javax.inject.Inject;
+import javax.inject.Named;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,7 +12,8 @@ import java.util.List;
 public class FurniturePostgresRepository {
     private final Connection connection;
 
-    public FurniturePostgresRepository(Connection connection) {
+    @Inject
+    public FurniturePostgresRepository(@Named("PostgresConnection") Connection connection) {
         this.connection = connection;
     }
 
@@ -57,7 +60,8 @@ public class FurniturePostgresRepository {
         }
         return furnitureList;
     }
-    public Furniture mapResultSetToFurniture (ResultSet resultSet) throws SQLException{
+
+    public Furniture mapResultSetToFurniture(ResultSet resultSet) throws SQLException {
         return new Furniture(resultSet.getInt("id"),
                 Type.valueOf(resultSet.getString("type")),
                 resultSet.getString("material"),

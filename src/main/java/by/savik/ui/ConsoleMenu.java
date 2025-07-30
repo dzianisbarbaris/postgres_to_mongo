@@ -1,12 +1,16 @@
 package by.savik.ui;
 
 import by.savik.config.FurnitureModule;
+import by.savik.config.WorkerModule;
 import by.savik.factory.FurnitureFactory;
+import by.savik.factory.WorkerFactory;
 import by.savik.model.Furniture;
 import by.savik.model.Type;
+import by.savik.model.Worker;
 import by.savik.service.FurnitureMongoService;
 import by.savik.service.FurniturePostgresService;
 import by.savik.service.FurniturePostgresToMongoService;
+import by.savik.service.WorkerPostgresService;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.mongodb.MongoException;
@@ -24,9 +28,130 @@ public class ConsoleMenu {
     private FurniturePostgresService furniturePostgresService;
     private FurnitureMongoService furnitureMongoService;
     private FurniturePostgresToMongoService transferService;
+    private WorkerPostgresService workerPostgresService;
     Injector injector = Guice.createInjector(new FurnitureModule());
+    Injector workerInjector = Guice.createInjector(new WorkerModule());
 
-    public void start() {
+
+    public void startWorkersMenu() {
+        initializeConnectionsToWorkerDatabase();
+        while (true) {
+            mainWorkerMenu();
+            logger.info("Select an action");
+            int action = scanner.nextInt();
+            switch (action) {
+                case 1:
+                    addWorkerToPostgres();
+                    break;
+                case 2:
+                    addAllWorkersToPostgres();
+                    break;
+                case 3:
+                    exportWorkersByName();
+                    break;
+                case 4:
+                    updateWorkerAgeById();
+                    break;
+                case 5:
+                    deleteWorkerById();
+                    break;
+                case 6:
+                    return;
+            }
+        }
+    }
+    public void mainWorkerMenu() {
+        System.out.println("==== Worker Manager ====");
+        System.out.println("1. Add worker to postgres database.");
+        System.out.println("2. Add List of workers to postgres database.");
+        System.out.println("3. Export workers by name from postgres database.");
+        System.out.println("4. Update workers age by ID.");
+        System.out.println("5. Delete worker by ID.");
+        System.out.println("6. Exit.");
+    }
+
+    private void initializeConnectionsToWorkerDatabase() {
+        try {
+            workerPostgresService = workerInjector.getInstance(WorkerPostgresService.class);
+        }  catch (Exception e) {
+            logger.error("Unexpected error during initialization: ", e);
+        }
+        logger.info("Database connections initialized successfully");
+    }
+
+    public void addWorkerToPostgres() {
+        try {
+            logger.info("Enter the name of worker");
+            String name = scanner.next();
+            logger.info("Enter the age of worker");
+            int age = scanner.nextInt();
+            workerPostgresService.addWorker(new Worker(name, age));
+        } catch (SQLException e) {
+            logger.error("The postgres database could not be accessed : ", e);
+        } catch (Exception e) {
+            logger.error("Unexpected error : ", e);
+        }
+    }
+
+    public void addAllWorkersToPostgres() {
+        List<Worker> workers = new ArrayList<>();
+        try {
+            logger.info("Enter the number of workers");
+            int number = scanner.nextInt();
+            workerPostgresService.addAllWorkers(WorkerFactory.nextList(number));
+        } catch (SQLException e) {
+            logger.error("The postgres database could not be accessed : ", e);
+        } catch (Exception e) {
+            logger.error("Unexpected error : ", e);
+        }
+    }
+
+    public List<Worker> exportWorkersByName() {
+        List<Worker> workersList = new ArrayList<>();
+        try {
+            logger.info("Enter the name of worker");
+            String name = scanner.next();
+            workersList = workerPostgresService.getWorkersByName(name);
+            workersList.forEach(logger::info);
+        } catch (SQLException e) {
+            logger.error("The postgres database could not be accessed : ", e);
+        } catch (Exception e) {
+            logger.error("Unexpected error : ", e);
+        }
+        return workersList;
+    }
+
+    public void updateWorkerAgeById() {
+        try {
+            logger.info("Enter the workers ID");
+            int id = scanner.nextInt();
+            logger.info("Enter the new age");
+            int age = scanner.nextInt();
+            workerPostgresService.updateWorkerAgeById(id, age);
+        } catch (SQLException e) {
+            logger.error("The postgres database could not be accessed : ", e);
+        } catch (Exception e) {
+            logger.error("Unexpected error : ", e);
+        }
+    }
+
+    public void deleteWorkerById() {
+        try {
+            logger.info("Enter the workers ID");
+            int id = scanner.nextInt();
+            workerPostgresService.deleteWorkerById(id);
+        } catch (SQLException e) {
+            logger.error("The postgres database could not be accessed : ", e);
+        } catch (Exception e) {
+            logger.error("Unexpected error : ", e);
+        }
+    }
+
+
+
+
+
+    public void startFurnitureMenu() {
         initializeConnections();
         while (true) {
             mainMenu();
@@ -43,18 +168,18 @@ public class ConsoleMenu {
                     exportFurnitureByMaterialFromMongoDB();
                     break;
                 case 4:
-                   /* closeConnections();*/
+                    /* closeConnections();*/
                     return;
             }
         }
     }
 
     public void mainMenu() {
-        logger.info("==== Furniture Manager ====");
-        logger.info("1. Add furniture to postgres database.");
-        logger.info("2. Transfer furniture by type from postgres to MongoDB.");
-        logger.info("3. Export furniture by material from MongoDB.");
-        logger.info("4. Exit.");
+        System.out.println("==== Furniture Manager ====");
+        System.out.println("1. Add furniture to postgres database.");
+        System.out.println("2. Transfer furniture by type from postgres to MongoDB.");
+        System.out.println("3. Export furniture by material from MongoDB.");
+        System.out.println("4. Exit.");
     }
 
     private void initializeConnections() {

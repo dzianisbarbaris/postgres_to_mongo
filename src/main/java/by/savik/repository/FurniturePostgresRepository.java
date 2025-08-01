@@ -82,5 +82,18 @@ public class FurniturePostgresRepository {
         }
         return furnitureList;
     }
+
+    public List<Furniture> getAllFurniture() throws SQLException {
+        List<Furniture> furnitureList = new ArrayList<>();
+        String sql = "SELECT * FROM furniture";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    furnitureList.add(mapResultSetToFurniture(resultSet));
+                }
+            }
+        }
+        return furnitureList;
+    }
 }
 

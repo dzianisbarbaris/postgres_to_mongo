@@ -17,7 +17,7 @@ public class WorkerPostgresRepository {
     private final Connection connection;
 
     @Inject
-    public WorkerPostgresRepository(@Named("PostgresWorkerDataBaseConnection") Connection connection) {
+    public WorkerPostgresRepository(@Named("PostgresWorkerConnection") Connection connection) {
         this.connection = connection;
     }
 
@@ -44,6 +44,23 @@ public class WorkerPostgresRepository {
         return new Worker(resultSet.getInt("id"),
                 resultSet.getString("name"),
                 resultSet.getInt("age"));
+    }
+
+    public List<Worker> getAllWorkers() throws SQLException {
+        List<Worker> workerList = new ArrayList<>();
+        String sql = "SELECT * FROM workers";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    workerList.add(mapResultSetToWorker(resultSet));
+                }
+            }
+        }
+        if (workerList.isEmpty()) {
+            System.out.println("Workers not found");
+            return null;
+        }
+        return workerList;
     }
 
     public List<Worker> getWorkersByName(String name) throws SQLException {

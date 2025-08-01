@@ -5,7 +5,7 @@ import by.savik.repository.FurniturePostgresRepository;
 import by.savik.service.FurnitureMongoService;
 import by.savik.service.FurniturePostgresService;
 import by.savik.service.FurniturePostgresToMongoService;
-import by.savik.ui.ConsoleMenu;
+import by.savik.service.WorkerPostgresService;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.name.Named;
@@ -52,12 +52,22 @@ public class FurnitureModule extends AbstractModule {
         bind(FurnitureMongoService.class);
         bind(FurniturePostgresService.class);
         bind(FurniturePostgresToMongoService.class);
+        bind(WorkerPostgresService.class);
     }
 
     @Provides
     @Named("PostgresConnection")
     Connection providePostgresConnection() throws SQLException {
         String URL = properties.getProperty("postgres.url");
+        String USER = properties.getProperty("postgres.user");
+        String PASSWORD = properties.getProperty("postgres.password");
+        return DriverManager.getConnection(URL, USER, PASSWORD);
+    }
+
+    @Provides
+    @Named("PostgresWorkerConnection")
+    Connection providePostgresWorkerConnection() throws SQLException {
+        String URL = properties.getProperty("postgres.worker.url");
         String USER = properties.getProperty("postgres.user");
         String PASSWORD = properties.getProperty("postgres.password");
         return DriverManager.getConnection(URL, USER, PASSWORD);
